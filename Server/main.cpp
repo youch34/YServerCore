@@ -15,7 +15,8 @@ int main()
 	while (true)
 	{
 		char Msg[MAX_CHAT_SIZE];
-		scanf_s("%s", Msg, MAX_CHAT_SIZE);
+		fgets(Msg, MAX_CHAT_SIZE, stdin);
+		//scanf_s("%s", Msg, MAX_CHAT_SIZE);
 		static ST_ChatMessage Message;
 		Message.Header.SetHeader(E_IOType::S_Chat);
 		Message.Header.Size = sizeof(ST_ChatMessage);

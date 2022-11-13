@@ -9,7 +9,7 @@ int main()
 	while (true)
 	{
 		char Msg[MAX_CHAT_SIZE] = "";
-		cin >> Msg;
+		fgets(Msg, MAX_CHAT_SIZE, stdin);
 		if (strcmp(Msg, "UserInfo") == 0)
 			User.SendUserInfo();
 		else
