@@ -1,75 +1,93 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="소스 파일">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="DataBase">
+      <UniqueIdentifier>{c317ae1c-fdaf-4e5a-966d-785fc687a85f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="헤더 파일">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="NetWork">
+      <UniqueIdentifier>{4e0add87-a26d-41ad-aed9-b237c683b1fb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="리소스 파일">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Thread">
+      <UniqueIdentifier>{8f785dde-26d0-4a7e-8cd2-b5558b396dff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{b92218a1-d88c-4580-91fc-bc4f01820165}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{7c4580e5-8129-4148-8994-4854375bc202}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Define">
+      <UniqueIdentifier>{c0bcca18-75d6-4a63-8048-4c2a96fe7469}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Database.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Log.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="PacketDataStructure.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>DataBase</Filter>
     </ClInclude>
     <ClInclude Include="PacketProcess.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>NetWork</Filter>
     </ClInclude>
     <ClInclude Include="Server.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>NetWork</Filter>
     </ClInclude>
     <ClInclude Include="Session.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>NetWork</Filter>
     </ClInclude>
     <ClInclude Include="SessionManager.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>NetWork</Filter>
     </ClInclude>
     <ClInclude Include="Thread.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketDataStructure.h">
+      <Filter>Define</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Define</Filter>
     </ClInclude>
     <ClInclude Include="CoreLibrary.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>Define</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Lock.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreTLS.h">
+      <Filter>Define</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="YServerCore.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Database.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>DataBase</Filter>
     </ClCompile>
     <ClCompile Include="PacketProcess.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>NetWork</Filter>
     </ClCompile>
     <ClCompile Include="Server.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>NetWork</Filter>
     </ClCompile>
     <ClCompile Include="Session.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>NetWork</Filter>
     </ClCompile>
     <ClCompile Include="Thread.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Define</Filter>
+    </ClCompile>
+    <ClCompile Include="YServerCore.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Lock.cpp">
+      <Filter>Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreTLS.cpp">
+      <Filter>Define</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

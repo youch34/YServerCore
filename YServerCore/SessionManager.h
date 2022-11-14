@@ -14,9 +14,10 @@ public:
 	}
 
 public:
-	void AddSession(Session* Session) { Session->SessionID = SessionCount;  Sessions.push_back(Session); SessionCount++; }
+	void AddSession(Session* Session) { Lock::SessionLock.TryLock(); Session->SessionID = SessionCount;  Sessions.push_back(Session); SessionCount++; }
 	void CloseSession(Session* Session)
 	{
+		Lock::SessionLock.TryLock();
 		Sessions[Session->SessionID] = Sessions.back();
 		Sessions.pop_back();
 		SessionCount--;

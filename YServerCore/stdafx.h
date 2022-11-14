@@ -11,6 +11,7 @@
 
 using namespace std;
 
+
 #include <stdio.h>
 #include <map>
 #include <thread>
@@ -22,8 +23,13 @@ using namespace std;
 #include <vector>
 #include <string>
 #include <stdarg.h>
+#include <atomic>
+#include <sysinfoapi.h>
 
 #include "Log.h"
 
+#include "CoreTLS.h"
 #include "PacketDataStructure.h"
 #include "Database.h"
+#include "Lock.h"
+

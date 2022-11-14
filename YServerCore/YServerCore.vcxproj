@@ -152,8 +152,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CoreLibrary.h" />
+    <ClInclude Include="CoreTLS.h" />
     <ClInclude Include="Database.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Lock.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="PacketDataStructure.h" />
     <ClInclude Include="PacketProcess.h" />
@@ -164,7 +166,9 @@
     <ClInclude Include="Thread.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CoreTLS.cpp" />
     <ClCompile Include="Database.cpp" />
+    <ClCompile Include="Lock.cpp" />
     <ClCompile Include="PacketProcess.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="Session.cpp" />

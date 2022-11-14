@@ -1,6 +1,5 @@
 #pragma once
 #include <mutex>
-
 class Server;
 
 class Data 
@@ -20,6 +19,7 @@ public:
 public:
 	void SetServer(Server* ServerPtr) { RunningServer = ServerPtr; }
 	bool Initialize();
+	void InitLocalThread();
 	void CloseThread() { bRunning = false; };
 
 	void AddWork(function<void(void)> func);

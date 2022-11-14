@@ -2,6 +2,7 @@
 #include "Thread.h"
 #include "Server.h"
 
+
 Thread::Thread()
 {
 	MaxThreadCount = thread::hardware_concurrency()*2 + 1;
@@ -27,8 +28,15 @@ bool Thread::Initialize()
 	{
 		ThreadPool[i] = thread(&Thread::NetworkProcess, this);
 	}
+	Log::PrintLog("%d count Thread Created" , MaxThreadCount);
 	bRunning = true;
 	return bRunning;
+}
+
+void Thread::InitLocalThread()
+{
+	static atomic<UINT32> SThreadId = 1;
+	LThreadId = SThreadId.fetch_add(1);
 }
 
 void Thread::AddWork(function<void(void)> func)
@@ -73,6 +81,7 @@ void Thread::Work()
 
 void Thread::NetworkProcess()
 {
+	InitLocalThread();
 	while (bRunning)
 	{
 		ST_IOData* IoData = nullptr;
