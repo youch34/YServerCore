@@ -14,10 +14,11 @@ public:
 	}
 
 public:
-	void AddSession(Session* Session) { Lock::SessionLock.TryLock(); Session->SessionID = SessionCount;  Sessions.push_back(Session); SessionCount++; }
+	Lock SessionLock;
+	void AddSession(Session* Session) { WriteLock(SessionLock);	Session->SessionID = SessionCount;  Sessions.push_back(Session); SessionCount++; }
 	void CloseSession(Session* Session)
 	{
-		Lock::SessionLock.TryLock();
+		WriteLock(SessionLock);
 		Sessions[Session->SessionID] = Sessions.back();
 		Sessions.pop_back();
 		SessionCount--;
@@ -25,6 +26,7 @@ public:
 	}
 	void AllMessage(char* Msg) 
 	{
+		WriteLock(SessionLock);
 		for (auto& Session : Sessions)
 		{
 			Session->SendPacket(Msg);

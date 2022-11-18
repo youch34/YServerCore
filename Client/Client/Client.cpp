@@ -2,14 +2,16 @@
 #include "Client.h"
 #include <WS2tcpip.h>
 
+
 Client::Client()
 {
-	
+	ProcessThreads.reserve(5);
 }
 
 Client::~Client()
 {
 	RecieveThread.join();
+	PopedReadData.clear();
 	closesocket(ClientSocket);
 	WSACleanup();
 }
@@ -50,8 +52,13 @@ bool Client::ConnectToServer()
 		Log::PrintLog("Fail to Connect");
 		return false;
 	}
-
+	Running = true;
 	RecieveThread = thread(&Client::RecieveWork, this);
+
+	for (int i = 0; i < 5; i++)
+	{
+		ProcessThreads.push_back(thread(&Client::Process, this));
+	}
 
 	return true;
 }
@@ -89,14 +96,52 @@ void Client::RecieveWork()
 {
 	while (true) 
 	{
-		ZeroMemory(&IODatas[Read], sizeof(ST_IOData));
 		IODatas[Read].Usage = E_IOUsage::Read;
-		WSABUF Buffer[BUF_SIZE] = {};
+		WSABUF Buffer = {0,};
 		int flags = 0;
-		Buffer->buf = IODatas[Read].Data;
-		Buffer->len = sizeof(ST_ChatMessage);
-		int result = recv(ClientSocket, Buffer->buf, Buffer->len, flags);
-		ST_ChatMessage* Msg = (ST_ChatMessage*)IODatas[Read].Data;
-		Log::PrintLog(Msg->Message);
+		Buffer.buf = IODatas[Read].Data;
+		Buffer.len = BUF_SIZE;
+		int result = recv(ClientSocket, Buffer.buf, Buffer.len, flags);
+		array<char, BUF_SIZE> ReadData{ 0, };
+		memcpy(ReadData.data(), IODatas[Read].Data, result);
+		ReadDataQueue.push(ReadData);
+		InputWork(result);
+		ZeroMemory(&IODatas[Read], sizeof(ST_IOData));
 	}
 }
+
+void Client::PacketWork()
+{
+}
+
+void Client::InputWork(int datasize)
+{
+	WriteLock(QueueLock)
+	char* DataPointer = ReadDataQueue.front().data();
+	int ReadSize = 0;
+	while(ReadSize < datasize)
+	{
+		ST_IOHeader* Header = (ST_IOHeader*)DataPointer;
+		pair<char*, int> Tempdata(DataPointer, Header->Size);
+		WorkQueue.push(Tempdata);
+		DataPointer += Header->Size;
+		ReadSize += Header->Size;
+		ProcessCondition.notify_one();
+	}
+	PopedReadData.push_back(ReadDataQueue.front().data());
+	ReadDataQueue.pop();
+}
+
+void Client::Process()
+{
+	while (Running) 
+	{
+		unique_lock<mutex> ULock(MsgLock);
+		ProcessCondition.wait(ULock, [this] { return !WorkQueue.empty(); });
+		ST_ChatMessage* msg = (ST_ChatMessage*)WorkQueue.front().first;
+		WorkQueue.pop();
+		std::cout << "Count" << ++count2 << endl;
+	}
+}
+
+

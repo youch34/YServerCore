@@ -34,4 +34,7 @@ public:
 		Packet.SetHeader(result);
 		return Packet;
 	};
+	//template<class T>
+	//shared_ptr<char*> MakeBuffer(char* Packet) { shared_ptr<char*> Buffer; T  }
+
 };

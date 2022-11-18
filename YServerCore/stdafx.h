@@ -1,11 +1,7 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN
-#define BUF_SIZE 1024
-#define MAX_CHAT_SIZE 512
-#define MAX_ID_LEN 24
-#define MAX_PW_LEN 24
-#define MAX_RESULT_MSG_LEN 32
+
 #pragma comment(lib,"ws2_32.lib")
 #pragma comment(lib, "libmysql.lib")
 
@@ -25,8 +21,12 @@ using namespace std;
 #include <stdarg.h>
 #include <atomic>
 #include <sysinfoapi.h>
+#include <cassert>
+#include <mutex>
+#include <array>
 
 #include "Log.h"
+#include "Definition.h"
 
 #include "CoreTLS.h"
 #include "PacketDataStructure.h"

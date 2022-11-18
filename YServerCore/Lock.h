@@ -1,5 +1,11 @@
 #pragma once
 
+enum E_LockType 
+{
+	LockGlobal,
+	LockSession,
+	LockDB
+};
 
 class Lock
 {
@@ -8,18 +14,37 @@ private:
 	{
 		LockTimeOutCount = 10000,
 		MaxSpinCount = 5000,
-		None = 0
+		WriteLockThreadMask = 0xffff0000,
+		ReadLockCountMask = 0x0000ffff,
+		Empty = 0
 	};
-	Lock() {}
 
 	atomic<UINT32> LockFlag = None;
 	UINT16 LockCount = 0;
+	E_LockType Type;
+public:
+	Lock() : Type(LockGlobal) {}
+	Lock(E_LockType locktype) : Type(locktype) {}
+	void TryWriteLock();
+	void TryReadLock();
+	void TryWriteUnLock();
+	void TryReadUnLock();
+
+};
+
+class WriteLockGuard 
+{
+public:
+	WriteLockGuard(Lock& lock) : Lock(lock) { Lock.TryReadLock(); }
+	~WriteLockGuard() { Lock.TryReadUnLock(); }
 private:
-	~Lock() { UnLock(); }
-	void UnLock();
+	Lock& Lock;
+};
+class ReadLockGuard 
+{
 public:
-	void TryLock();
-public:
-	static Lock SessionLock;
-	static Lock DBLock;
+	ReadLockGuard(Lock& lock) : Lock(lock) { Lock.TryReadLock(); }
+	~ReadLockGuard() { Lock.TryReadUnLock(); }
+private:
+	Lock& Lock;
 };

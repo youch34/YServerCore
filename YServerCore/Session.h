@@ -40,6 +40,8 @@ public:
 	~Session();
 	void SetIODataUsage()
 	{
+		ZeroMemory(&IODatas[Read], sizeof(ST_IOData));
+		ZeroMemory(&IODatas[Write], sizeof(ST_IOData));
 		IODatas[Read].Usage = E_IOUsage::Read;
 		IODatas[Write].Usage = E_IOUsage::Write;
 	}
@@ -52,7 +54,7 @@ public:
 
 	void OnSend(size_t TransferSize);
 	void SendPacket(char* Packet);
-	void Send(WSABUF Buffer);
+	void Send();
 
 	void SetUserInfo(ST_UserInfo userinfo) { UserInfo = userinfo; }
 	void SetSessionState(E_SessionState state) { SessionState = state; }
@@ -63,8 +65,11 @@ public:
 	PacketProcess PacketProcessor;
 	ST_IOData IODatas[3] = {0,};
 	int SessionID = 0;
-
+	queue<char*> SendQueue;
 	ST_UserInfo UserInfo;
-
+	Lock SendLock;
+	Lock QueueLock;
 	E_SessionState SessionState = E_SessionState::Wait;
+
+public:
 };

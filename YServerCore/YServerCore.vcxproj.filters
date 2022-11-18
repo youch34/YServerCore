@@ -60,6 +60,12 @@
     <ClInclude Include="CoreTLS.h">
       <Filter>Define</Filter>
     </ClInclude>
+    <ClInclude Include="Definition.h">
+      <Filter>Define</Filter>
+    </ClInclude>
+    <ClInclude Include="DeadLockProfiler.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Database.cpp">
@@ -88,6 +94,9 @@
     </ClCompile>
     <ClCompile Include="CoreTLS.cpp">
       <Filter>Define</Filter>
+    </ClCompile>
+    <ClCompile Include="DeadLockProfiler.cpp">
+      <Filter>Thread</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

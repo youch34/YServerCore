@@ -1,7 +1,7 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN
-#define BUF_SIZE 1024
+//#define BUF_SIZE 1024
 
 #pragma comment(lib,"ws2_32.lib")
 

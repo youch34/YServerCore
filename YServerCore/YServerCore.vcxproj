@@ -154,6 +154,8 @@
     <ClInclude Include="CoreLibrary.h" />
     <ClInclude Include="CoreTLS.h" />
     <ClInclude Include="Database.h" />
+    <ClInclude Include="DeadLockProfiler.h" />
+    <ClInclude Include="Definition.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Lock.h" />
     <ClInclude Include="Log.h" />
@@ -168,6 +170,7 @@
   <ItemGroup>
     <ClCompile Include="CoreTLS.cpp" />
     <ClCompile Include="Database.cpp" />
+    <ClCompile Include="DeadLockProfiler.cpp" />
     <ClCompile Include="Lock.cpp" />
     <ClCompile Include="PacketProcess.cpp" />
     <ClCompile Include="Server.cpp" />
