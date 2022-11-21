@@ -95,13 +95,11 @@ void Thread::NetworkProcess()
 		{
 			case E_IOUsage::Read :
 			{
-				Log::PrintLog("READ Request");
 				Session->OnRecv(transferSize);
 				continue;
 			}
 			case E_IOUsage::Write :
 			{
-				Log::PrintLog("WRITE Request");
 				Session->OnSend(transferSize);
 				continue;
 			}

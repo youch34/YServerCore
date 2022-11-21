@@ -93,7 +93,10 @@ void Session::SendPacket(char* Packet)
 	{
 		//WriteLock(QueueLock);
 		lock_guard<mutex> lg(Qmutex);
-		SendQueue.push(PacketProcess::MakeSendPacket(Packet));
+		ST_IOHeader* Header = (ST_IOHeader*)Packet;
+		shared_ptr<YPacket> SendPacket(static_cast<YPacket*>(malloc(Header->Size)), free);
+		memcpy(SendPacket.get(), Packet, Header->Size);
+		SendQueue.push(SendPacket);
 	}
 
 	bool Expected = false;
