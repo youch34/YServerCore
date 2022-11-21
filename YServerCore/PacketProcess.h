@@ -34,7 +34,12 @@ public:
 		Packet.SetHeader(result);
 		return Packet;
 	};
-	//template<class T>
-	//shared_ptr<char*> MakeBuffer(char* Packet) { shared_ptr<char*> Buffer; T  }
-
+	
+	static shared_ptr<YPacket> MakeSendPacket(char* Packet)
+	{
+		ST_IOHeader* Header = (ST_IOHeader*)Packet;
+		shared_ptr<YPacket> SendPacket(static_cast<YPacket*>(malloc(Header->Size)), free);
+		memcpy(SendPacket.get(), Packet, Header->Size);
+		return SendPacket;
+	}
 };

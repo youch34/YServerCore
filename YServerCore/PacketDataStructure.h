@@ -16,6 +16,11 @@ enum E_IOType
 	S_Move,
 };
 
+struct YPacket
+{
+
+};
+
 struct ST_IOHeader
 {
 	E_IOType IOType = E_IOType::None;
@@ -42,7 +47,7 @@ struct ST_IOHeader
 	}
 };
 
-struct ST_UserInfo
+struct ST_UserInfo : YPacket
 {
 	ST_IOHeader Header{ E_IOType::S_Connect, sizeof(ST_UserInfo) };
 	char Id[MAX_ID_LEN];
@@ -54,7 +59,7 @@ struct ST_UserInfo
 	}
 };
 
-struct ST_ChatMessage
+struct ST_ChatMessage : YPacket
 {
 	ST_IOHeader Header{ E_IOType::None, sizeof(ST_ChatMessage) };
 	char Id[MAX_ID_LEN];
@@ -66,7 +71,7 @@ struct ST_ChatMessage
 	}
 };
 
-struct ST_MoveInfo
+struct ST_MoveInfo : YPacket
 {
 	ST_IOHeader Header{ E_IOType::None, sizeof(ST_MoveInfo) };
 	char Id[MAX_ID_LEN];

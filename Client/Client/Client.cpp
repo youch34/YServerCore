@@ -45,7 +45,6 @@ bool Client::ConnectToServer()
 	ServerAddr.sin_family = AF_INET;
 	ServerAddr.sin_port = htons((USHORT)13000);
 	inet_pton(AF_INET, "127.0.0.1", &(ServerAddr.sin_addr));
-
 	int result = WSAConnect(ClientSocket, (sockaddr*)&ServerAddr, sizeof(ServerAddr), NULL, NULL, NULL, NULL);
 	if (result == SOCKET_ERROR)
 	{
@@ -102,9 +101,6 @@ void Client::RecieveWork()
 		Buffer.buf = IODatas[Read].Data;
 		Buffer.len = BUF_SIZE;
 		int result = recv(ClientSocket, Buffer.buf, Buffer.len, flags);
-		array<char, BUF_SIZE> ReadData{ 0, };
-		memcpy(ReadData.data(), IODatas[Read].Data, result);
-		ReadDataQueue.push(ReadData);
 		InputWork(result);
 		ZeroMemory(&IODatas[Read], sizeof(ST_IOData));
 	}
@@ -116,20 +112,20 @@ void Client::PacketWork()
 
 void Client::InputWork(int datasize)
 {
-	WriteLock(QueueLock)
-	char* DataPointer = ReadDataQueue.front().data();
+	char* DataPointer = IODatas[Read].Data;
 	int ReadSize = 0;
 	while(ReadSize < datasize)
 	{
 		ST_IOHeader* Header = (ST_IOHeader*)DataPointer;
-		pair<char*, int> Tempdata(DataPointer, Header->Size);
-		WorkQueue.push(Tempdata);
+		if (Header->IOType == None)
+			return;
+		shared_ptr<YPacket> Packet(static_cast<YPacket*>(malloc(Header->Size)), free);
+		memcpy(Packet.get(), DataPointer, Header->Size);
+		WorkQueue.push(Packet);
 		DataPointer += Header->Size;
 		ReadSize += Header->Size;
 		ProcessCondition.notify_one();
 	}
-	PopedReadData.push_back(ReadDataQueue.front().data());
-	ReadDataQueue.pop();
 }
 
 void Client::Process()
@@ -138,9 +134,11 @@ void Client::Process()
 	{
 		unique_lock<mutex> ULock(MsgLock);
 		ProcessCondition.wait(ULock, [this] { return !WorkQueue.empty(); });
-		ST_ChatMessage* msg = (ST_ChatMessage*)WorkQueue.front().first;
+		//[this] { return !WorkQueue.empty(); }
+		ST_ChatMessage* msg = (ST_ChatMessage*)WorkQueue.front().get();
+		static int count = 0;
+		Log::PrintLog("%d", ++count);
 		WorkQueue.pop();
-		std::cout << "Count" << ++count2 << endl;
 	}
 }
 

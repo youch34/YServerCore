@@ -30,6 +30,7 @@ public:
 	E_IOUsage Usage;
 	size_t TotalBytes;
 	size_t CurBytes;
+	atomic<bool> Complete;
 	char Data[BUF_SIZE];
 };
 
@@ -65,11 +66,13 @@ public:
 	PacketProcess PacketProcessor;
 	ST_IOData IODatas[3] = {0,};
 	int SessionID = 0;
-	queue<char*> SendQueue;
+	queue<shared_ptr<YPacket>> SendQueue;
+	vector<shared_ptr<YPacket>> SendBuffers;
 	ST_UserInfo UserInfo;
 	Lock SendLock;
 	Lock QueueLock;
+	mutex Qmutex;
 	E_SessionState SessionState = E_SessionState::Wait;
-
 public:
+	
 };

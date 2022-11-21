@@ -26,7 +26,7 @@ public:
 	ST_IOData IODatas[3];
 	list<char*> PopedReadData;
 	queue<array<char, BUF_SIZE>> ReadDataQueue;
-	queue<pair<char*, int>> WorkQueue;
+	queue<shared_ptr<YPacket>> WorkQueue;
 	vector<thread> ProcessThreads;
 	condition_variable ProcessCondition;
 	Lock QueueLock;
