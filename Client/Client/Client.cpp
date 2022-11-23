@@ -101,6 +101,7 @@ void Client::RecieveWork()
 		Buffer.buf = IODatas[Read].Data;
 		Buffer.len = BUF_SIZE;
 		int result = recv(ClientSocket, Buffer.buf, Buffer.len, flags);
+		Log::PrintLog("%d", result);
 		InputWork(result);
 		ZeroMemory(&IODatas[Read], sizeof(ST_IOData));
 	}
@@ -117,7 +118,7 @@ void Client::InputWork(int datasize)
 	while(ReadSize < datasize)
 	{
 		ST_IOHeader* Header = (ST_IOHeader*)DataPointer;
-		if (Header->IOType == None)
+		if (Header <= 0)
 			return;
 		shared_ptr<YPacket> Packet(static_cast<YPacket*>(malloc(Header->Size)), free);
 		memcpy(Packet.get(), DataPointer, Header->Size);
@@ -136,8 +137,6 @@ void Client::Process()
 		ProcessCondition.wait(ULock, [this] { return !WorkQueue.empty(); });
 		//[this] { return !WorkQueue.empty(); }
 		ST_ChatMessage* msg = (ST_ChatMessage*)WorkQueue.front().get();
-		static int count = 0;
-		Log::PrintLog("%d", ++count);
 		WorkQueue.pop();
 	}
 }
