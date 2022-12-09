@@ -74,15 +74,14 @@ void Session::OnSend(size_t TransferSize)
 		Buffer.len = IODatas[Write].TotalBytes - (ULONG)IODatas[Write].CurBytes;
 		Send();
 	}
-	if (!SendQueue.empty())
-	{
-		Send();
-		return;
-	}
+	//if (!SendQueue.empty())
+	//{
+	//	Send();
+	//	return;
+	//}
 	ZeroMemory(&IODatas[Write], sizeof(ST_IOData));
 	IODatas[Write].Usage = E_IOUsage::Write;
-	SendBuffers.clear();
-	IODatas[Write].Complete.store(true);
+	IODatas[Write].Complete.store(false);
 }
 
 void Session::SendPacket(char* Packet)
@@ -121,6 +120,7 @@ void Session::Send()
 		memcpy(DataPointer, SendQueue.front().get(), Header->Size);
 		DataPointer += Header->Size;
 		DataSize += Header->Size;
+		Log::PrintLog("S_SendCount : %d", Header->Size);
 		SendQueue.pop();
 	}
 	DWORD SendBytes = 0;
