@@ -1,6 +1,7 @@
 #include "CoreLibrary.h"
 #pragma comment (lib, "libmysql.lib")
 #pragma comment (lib, "YServerCore.lib")
+#include <fstream>
 
 void Send() 
 {
@@ -25,19 +26,23 @@ int main()
 		return false;
 	}
 	
-	Sleep(5000);
-	thread t1 = thread(Send);
-	thread t2 = thread(Send);
-	thread t3 = thread(Send);
-	thread t4 = thread(Send);
-	
-	
-	t1.join();
-	t2.join();
-	t3.join();
-	t4.join();
+	//Sleep(5000);
+	//thread t1 = thread(Send);
+	//thread t2 = thread(Send);
+	//thread t3 = thread(Send);
+	//thread t4 = thread(Send);
+	//
+	//
+	//t1.join();
+	//t2.join();
+	//t3.join();
+	//t4.join();
 
-
+	std::ofstream out("Test.txt");
+	if (out.is_open())
+	{
+		out << "GEWFFFFFFFFF" << endl;
+	}
 	
 
 
