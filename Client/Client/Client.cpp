@@ -35,7 +35,7 @@ bool Client::CreateClientSocket()
 
 	int reUseAddr = 1;
 	::setsockopt(ClientSocket, SOL_SOCKET, SO_REUSEADDR, (char*)&reUseAddr, (int)sizeof(reUseAddr));
-
+	ZeroMemory(IODatas[Read].Data, BUF_SIZE);
 	return true;
 }
 
@@ -54,11 +54,11 @@ bool Client::ConnectToServer()
 	Running = true;
 	RecieveThread = thread(&Client::RecieveWork, this);
 
-	for (int i = 0; i < 5; i++)
-	{
-		ProcessThreads.push_back(thread(&Client::Process, this));
-	}
-
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	ProcessThreads.push_back(thread(&Client::Process, this));
+	//}
+	SetHandler();
 	return true;
 }
 
@@ -98,47 +98,52 @@ void Client::RecieveWork()
 		IODatas[Read].Usage = E_IOUsage::Read;
 		WSABUF Buffer = {0,};
 		int flags = 0;
-		Buffer.buf = IODatas[Read].Data;
-		Buffer.len = BUF_SIZE;
+		Buffer.buf = IODatas[Read].Data + IODatas[Read].CurBytes;
+		Buffer.len = BUF_SIZE - IODatas[Read].CurBytes;
 		int result = recv(ClientSocket, Buffer.buf, Buffer.len, flags);
-		Log::PrintLog("%d", result);
-		InputWork(result);
-		ZeroMemory(&IODatas[Read], sizeof(ST_IOData));
-	}
-}
+		//InputWork(result);
+		if (result > 580)
+		{
+			cout << result << endl;
+		}
+		IODatas[Read].CurBytes += result;
+		if (IODatas[Read].CurBytes == BUF_SIZE)
+		{
+			lock_guard<mutex> LockGuard(ReadLock);
+			memcpy(IODatas[Read].Data, IODatas[Read].Data + IODatas[Read].DataPointer, BUF_SIZE - IODatas[Read].DataPointer);
+			IODatas[Read].CurBytes = BUF_SIZE - IODatas[Read].DataPointer;
+			IODatas[Read].DataPointer = 0;
+		}
 
-void Client::PacketWork()
-{
-}
+		while (IODatas[Read].DataPointer < IODatas[Read].CurBytes)
+		{
+			if ((IODatas[Read].CurBytes - IODatas[Read].DataPointer) < sizeof(ST_IOHeader))
+				break;
+			
+			ST_IOHeader* Header = (ST_IOHeader*)(IODatas[Read].Data + IODatas[Read].DataPointer);
+			
+			if ((IODatas[Read].CurBytes - IODatas[Read].DataPointer) < Header->Size)
+				break;
 
-void Client::InputWork(int datasize)
-{
-	char* DataPointer = IODatas[Read].Data;
-	int ReadSize = 0;
-	while(ReadSize < datasize)
-	{
-		ST_IOHeader* Header = (ST_IOHeader*)DataPointer;
-		if (Header <= 0)
-			return;
-		shared_ptr<YPacket> Packet(static_cast<YPacket*>(malloc(Header->Size)), free);
-		memcpy(Packet.get(), DataPointer, Header->Size);
-		WorkQueue.push(Packet);
-		DataPointer += Header->Size;
-		ReadSize += Header->Size;
-		ProcessCondition.notify_one();
+			if (Handler[Header->IOType])
+			{
+				Handler[Header->IOType](IODatas[Read].Data + IODatas[Read].DataPointer, Header->Size);
+				//cout << ++count1 << endl;
+				//HandleDataQueue.push(ST_HandleData{ Header->IOType, IODatas[Read].Data + IODatas[Read].DataPointer, Header->Size });
+			}
+
+		}
+		if (IODatas[Read].DataPointer == IODatas[Read].CurBytes)
+		{
+			IODatas[Read].CurBytes = 0;
+			IODatas[Read].DataPointer = 0;
+		}
 	}
 }
 
 void Client::Process()
 {
-	while (Running) 
-	{
-		unique_lock<mutex> ULock(MsgLock);
-		ProcessCondition.wait(ULock, [this] { return !WorkQueue.empty(); });
-		//[this] { return !WorkQueue.empty(); }
-		ST_ChatMessage* msg = (ST_ChatMessage*)WorkQueue.front().get();
-		WorkQueue.pop();
-	}
+	
 }
 
 

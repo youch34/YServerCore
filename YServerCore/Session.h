@@ -30,6 +30,7 @@ public:
 	E_IOUsage Usage;
 	size_t TotalBytes;
 	size_t CurBytes;
+	size_t DataPointer;
 	atomic<bool> Complete;
 	char Data[BUF_SIZE];
 };

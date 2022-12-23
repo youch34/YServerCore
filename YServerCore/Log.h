@@ -15,6 +15,7 @@ public:
 		return instance;
 	}
 
+
 public:
 	static void PrintLog(const char* str, ...) 
 	{

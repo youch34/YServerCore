@@ -93,6 +93,10 @@ void Session::SendPacket(char* Packet)
 		//WriteLock(QueueLock);
 		lock_guard<mutex> lg(Qmutex);
 		ST_IOHeader* Header = (ST_IOHeader*)Packet;
+		static int SendCount = 0;
+		ST_ChatMessage* Msg = (ST_ChatMessage*)Packet;
+		Msg->SetMessage("Server", std::to_string(++SendCount));
+		cout << SendCount << endl;
 		shared_ptr<YPacket> SendPacket(static_cast<YPacket*>(malloc(Header->Size)), free);
 		memcpy(SendPacket.get(), Packet, Header->Size);
 		SendQueue.push(SendPacket);
@@ -120,7 +124,6 @@ void Session::Send()
 		memcpy(DataPointer, SendQueue.front().get(), Header->Size);
 		DataPointer += Header->Size;
 		DataSize += Header->Size;
-		Log::PrintLog("S_SendCount : %d", Header->Size);
 		SendQueue.pop();
 	}
 	DWORD SendBytes = 0;
@@ -130,5 +133,6 @@ void Session::Send()
 	Buffer.len = DataSize;
 	IODatas[Write].TotalBytes = DataSize;
 	int result = WSASend(SocketData.Socket, &Buffer, 1, &SendBytes, flags, &IODatas[Write].Overlapped, NULL);
+
 }
 
