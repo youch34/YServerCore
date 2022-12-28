@@ -11,6 +11,7 @@ Thread::Thread()
 
 Thread::~Thread()
 {
+	bRunning = false;
 	for (int i = 0; i < MaxThreadCount; i++)
 	{
 		ThreadPool[i].join();
@@ -24,11 +25,11 @@ bool Thread::Initialize()
 		Log::PrintLog("Need Set Server");
 		return false;
 	}
-	for (int i = 0; i < MaxThreadCount; i++)
-	{
-		ThreadPool[i] = thread(&Thread::NetworkProcess, this);
-	}
-	Log::PrintLog("%d count Thread Created" , MaxThreadCount);
+	//for (int i = 0; i < MaxThreadCount; i++)
+	//{
+	//	ThreadPool[i] = thread(&Thread::NetworkProcess, this);
+	//}
+	//Log::PrintLog("%d count Thread Created\n" , MaxThreadCount);
 	bRunning = true;
 	return bRunning;
 }

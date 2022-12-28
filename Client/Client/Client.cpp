@@ -5,13 +5,12 @@
 
 Client::Client()
 {
-	ProcessThreads.reserve(5);
 }
 
 Client::~Client()
 {
+	Running = false;
 	RecieveThread.join();
-	PopedReadData.clear();
 	closesocket(ClientSocket);
 	WSACleanup();
 }
@@ -53,32 +52,24 @@ bool Client::ConnectToServer()
 	}
 	Running = true;
 	RecieveThread = thread(&Client::RecieveWork, this);
-
-	//for (int i = 0; i < 4; i++)
-	//{
-	//	ProcessThreads.push_back(thread(&Client::Process, this));
-	//}
 	SetHandler();
 	return true;
 }
 
-void Client::SendToServer(char* Msg)
+void Client::SendToServer(char* data)
 {
-	ZeroMemory(&IODatas[Read], sizeof(ST_IOData));
-	ST_ChatMessage Message;
-	Message.Header.IOType = E_IOType::C_Chat;
-	Message.SetMessage("DummyClient", Msg);
 	WSABUF Buffer = {0,};
 	DWORD flags = 0;
-	DWORD recvBytes;
-	Buffer.len = Message.Header.Size;
-	Buffer.buf = (char*)&Message;
-	WSASend(ClientSocket, &Buffer, 1, &recvBytes, flags, &IODatas[Read].Overlapped, NULL);
+	//DWORD recvBytes;
+	ST_IOHeader* Header = (ST_IOHeader*)data;
+	//Buffer.len = Header->Size;
+	//Buffer.buf = data;
+	//WSASend(ClientSocket, &Buffer, 1, &recvBytes, flags, &IODatas[Read].Overlapped, NULL);
+	send(ClientSocket, data, Header->Size, flags);
 }
 
 void Client::SendUserInfo()
 {
-	ZeroMemory(&IODatas[Write], sizeof(ST_IOData));
 	IODatas[Write].Usage = E_IOUsage::Write;
 	ST_UserInfo Info;
 	char Name[16] = "YuChoongHo";
@@ -93,7 +84,7 @@ void Client::SendUserInfo()
 
 void Client::RecieveWork()
 {
-	while (true) 
+	while (Running)
 	{
 		IODatas[Read].Usage = E_IOUsage::Read;
 		WSABUF Buffer = {0,};
@@ -101,20 +92,9 @@ void Client::RecieveWork()
 		Buffer.buf = IODatas[Read].Data + IODatas[Read].CurBytes;
 		Buffer.len = BUF_SIZE - IODatas[Read].CurBytes;
 		int result = recv(ClientSocket, Buffer.buf, Buffer.len, flags);
-		//InputWork(result);
-		if (result > 580)
-		{
-			cout << result << endl;
-		}
-		IODatas[Read].CurBytes += result;
-		if (IODatas[Read].CurBytes == BUF_SIZE)
-		{
-			lock_guard<mutex> LockGuard(ReadLock);
-			memcpy(IODatas[Read].Data, IODatas[Read].Data + IODatas[Read].DataPointer, BUF_SIZE - IODatas[Read].DataPointer);
-			IODatas[Read].CurBytes = BUF_SIZE - IODatas[Read].DataPointer;
-			IODatas[Read].DataPointer = 0;
-		}
 
+		IODatas[Read].CurBytes += result;
+	
 		while (IODatas[Read].DataPointer < IODatas[Read].CurBytes)
 		{
 			if ((IODatas[Read].CurBytes - IODatas[Read].DataPointer) < sizeof(ST_IOHeader))
@@ -127,23 +107,34 @@ void Client::RecieveWork()
 
 			if (Handler[Header->IOType])
 			{
+				//ST_HandleData Data{ Header->IOType, Header->Size };
+				//memcpy(Data.data, IODatas[Read].Data + IODatas[Read].DataPointer, Header->Size);
+				//std::async(&Client::Process, this, Data);
 				Handler[Header->IOType](IODatas[Read].Data + IODatas[Read].DataPointer, Header->Size);
-				//cout << ++count1 << endl;
-				//HandleDataQueue.push(ST_HandleData{ Header->IOType, IODatas[Read].Data + IODatas[Read].DataPointer, Header->Size });
 			}
+			else
+				break;
 
 		}
-		if (IODatas[Read].DataPointer == IODatas[Read].CurBytes)
+		if (IODatas[Read].CurBytes == BUF_SIZE)
 		{
+			lock_guard<mutex> LockGuard(ReadLock);
+			memcpy(IODatas[Read].Data, IODatas[Read].Data + IODatas[Read].DataPointer, BUF_SIZE - IODatas[Read].DataPointer);
+			IODatas[Read].CurBytes = BUF_SIZE - IODatas[Read].DataPointer;
+			IODatas[Read].DataPointer = 0;
+		}
+		else
+		{
+			lock_guard<mutex> LockGuard(ReadLock);
 			IODatas[Read].CurBytes = 0;
 			IODatas[Read].DataPointer = 0;
 		}
 	}
 }
 
-void Client::Process()
+void Client::Process(ST_HandleData data)
 {
-	
+	Handler[data.type](data.data, data.size);
 }
 
 

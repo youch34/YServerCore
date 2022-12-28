@@ -5,14 +5,13 @@
 
 void Send() 
 {
-	for (int i = 0; i < 6000; i++)
+	for (int i = 0; i < 500; i++)
 	{
 		ST_ChatMessage Message;
 		Message.Header.SetHeader(E_IOType::S_Chat);
 		Message.Header.Size = sizeof(ST_ChatMessage);
 		Message.SetMessage("Server", "Msg");
 		SessionManager::Get().AllMessage((char*)&Message);
-
 	}
 }
 
@@ -25,7 +24,7 @@ int main()
 		return false;
 	}
 	
-	Sleep(5000);
+	Sleep(3000);
 	thread t1 = thread(Send);
 	thread t2 = thread(Send);
 	thread t3 = thread(Send);
@@ -36,12 +35,6 @@ int main()
 	t2.join();
 	t3.join();
 	t4.join();
-
-	//std::ofstream out("Test.txt");
-	//if (out.is_open())
-	//{
-	//	out << "GEWFFFFFFFFF" << endl;
-	//}
 	
 
 

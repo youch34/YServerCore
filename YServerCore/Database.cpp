@@ -9,10 +9,10 @@ bool Database::CreateAccount(ST_UserInfo userinfo)
 	return IsValidAccount(userinfo);
 }
 
-bool Database::IsValidID(ST_UserInfo userinfo)
+bool Database::IsValidID(string id)
 {
 	//ReadLock(LockDB);
-	string str = "SELECT * FROM users WHERE id='" + (string)userinfo.Id + "'";
+	string str = "SELECT * FROM users WHERE id='" + id + "'";
 	Query(str);
 	Result = mysql_store_result(pConn);
 	Row = mysql_fetch_row(Result);

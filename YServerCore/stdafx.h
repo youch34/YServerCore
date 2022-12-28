@@ -10,6 +10,9 @@ using namespace std;
 
 #include <stdio.h>
 #include <map>
+#include <future>
+#include <shared_mutex>
+#include <unordered_map>
 #include <thread>
 #include <Windows.h>
 #include <functional>

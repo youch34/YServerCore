@@ -1,5 +1,9 @@
 #include "stdafx.h"
 #include "Session.h"
+#include "PacketProcess.h"
+#include "SessionManager.h"
+
+
 
 Session::Session()
 {
@@ -21,39 +25,48 @@ void Session::OnAccept(ST_SocketData NewSocketData)
 
 void Session::OnRecv(size_t TransferSize)
 {
+	if(TransferSize == 0)
+		SessionManager::Get().CloseSession(this);
+
 	IODatas[Read].CurBytes += TransferSize;
-	if (IODatas[Read].TotalBytes == 0)
+
+	while (IODatas[Read].DataPointer < IODatas[Read].CurBytes)
 	{
-		if (TransferSize > sizeof(ST_IOHeader))
+		if ((IODatas[Read].CurBytes - IODatas[Read].DataPointer) < sizeof(ST_IOHeader))
+			break;
+
+		ST_IOHeader* Header = (ST_IOHeader*)(IODatas[Read].Data + IODatas[Read].DataPointer);
+
+		if ((IODatas[Read].CurBytes - IODatas[Read].DataPointer) < Header->Size)
+			break;
+
+		if (PacketProcess::Get().Handler[Header->IOType])
 		{
-			ST_IOHeader* Header = (ST_IOHeader*)IODatas[Read].Data;
-			IODatas[Read].TotalBytes = Header->Size;
-			WSABUF Buffer = { 0, };
-			Buffer.buf = IODatas[Read].Data + IODatas[Read].CurBytes;
-			Buffer.len = IODatas[Read].TotalBytes - (ULONG)IODatas[Read].CurBytes;
+			PacketProcess::Get().Handler[Header->IOType](this, IODatas[Read].Data + IODatas[Read].DataPointer, Header->Size);
 		}
+		else
+			break;
 	}
-	if (IODatas[Read].CurBytes < IODatas[Read].TotalBytes)
+	if (IODatas[Read].CurBytes == BUF_SIZE)
 	{
-		WSABUF Buffer = { 0, };
-		Buffer.buf = IODatas[Read].Data + IODatas[Read].CurBytes;
-		Buffer.len = BUF_SIZE - (ULONG)IODatas[Read].CurBytes;
-		Recv(Buffer);
-		return;
+		memcpy(IODatas[Read].Data, IODatas[Read].Data + IODatas[Read].DataPointer, BUF_SIZE - IODatas[Read].DataPointer);
+		IODatas[Read].CurBytes = BUF_SIZE - IODatas[Read].DataPointer;
+		IODatas[Read].DataPointer = 0;
 	}
-
-	//PacketProcessor.Processing(this , E_IOUsage::Read);
-
+	else
+	{
+		IODatas[Read].CurBytes = 0;
+		IODatas[Read].DataPointer = 0;
+	}
 	this->ReadyToRecieve();
 }
 
 void Session::ReadyToRecieve()
 {
-	ZeroMemory(&IODatas[Read], sizeof(ST_IOData));
 	IODatas[Read].Usage = E_IOUsage::Read;
 	WSABUF Buffer = {0,};
-	Buffer.buf = IODatas[Read].Data;
-	Buffer.len = BUF_SIZE;
+	Buffer.buf = IODatas[Read].Data + IODatas[Read].CurBytes;
+	Buffer.len = BUF_SIZE - IODatas[Read].CurBytes;
 	this->Recv(Buffer);
 }
 
@@ -66,22 +79,8 @@ void Session::Recv(WSABUF Buffer)
 
 void Session::OnSend(size_t TransferSize)
 {
-	IODatas[Write].CurBytes += TransferSize;
-	if ((IODatas[Write].CurBytes += TransferSize) < IODatas[Write].TotalBytes)
-	{
-		WSABUF Buffer = {0,};
-		Buffer.buf = IODatas[Write].Data + IODatas[Write].CurBytes;
-		Buffer.len = IODatas[Write].TotalBytes - (ULONG)IODatas[Write].CurBytes;
-		Send();
-	}
-	//if (!SendQueue.empty())
-	//{
-	//	Send();
-	//	return;
-	//}
-	ZeroMemory(&IODatas[Write], sizeof(ST_IOData));
-	IODatas[Write].Usage = E_IOUsage::Write;
-	IODatas[Write].Complete.store(false);
+	if (TransferSize == 0)
+		SessionManager::Get().CloseSession(this);
 }
 
 void Session::SendPacket(char* Packet)
@@ -90,49 +89,36 @@ void Session::SendPacket(char* Packet)
 		return;
 
 	{
-		//WriteLock(QueueLock);
-		lock_guard<mutex> lg(Qmutex);
+		std::unique_lock<std::shared_mutex> lock(S_Mutex);
 		ST_IOHeader* Header = (ST_IOHeader*)Packet;
-		static int SendCount = 0;
-		ST_ChatMessage* Msg = (ST_ChatMessage*)Packet;
-		Msg->SetMessage("Server", std::to_string(++SendCount));
-		cout << SendCount << endl;
-		shared_ptr<YPacket> SendPacket(static_cast<YPacket*>(malloc(Header->Size)), free);
-		memcpy(SendPacket.get(), Packet, Header->Size);
-		SendQueue.push(SendPacket);
+		if (IODatas[Write].CurBytes + Header->Size > BUF_SIZE)
+		{
+			Sleep(10);
+			this->SendPacket(Packet);
+			return;
+		}
+		memcpy(IODatas[Write].Data + IODatas[Write].CurBytes, Packet, Header->Size);
+		IODatas[Write].CurBytes += Header->Size;
 	}
-
-	bool Expected = false;
-	if (IODatas[Write].Complete.compare_exchange_strong(Expected, true))
-	{
-		//WriteLock(QueueLock);
-		lock_guard<mutex> lg(Qmutex);
-		Send();
-	}
-
+	std::unique_lock<std::shared_mutex> lock(S_Mutex);
+	Send();
 }
 
 void Session::Send()
 {	
-	char* DataPointer = IODatas[Write].Data;
-	int DataSize = 0;
-	while (!SendQueue.empty())
-	{
-		ST_IOHeader* Header = (ST_IOHeader*)SendQueue.front().get();
-		if (DataSize + Header->Size > BUF_SIZE)
-			break;
-		memcpy(DataPointer, SendQueue.front().get(), Header->Size);
-		DataPointer += Header->Size;
-		DataSize += Header->Size;
-		SendQueue.pop();
-	}
 	DWORD SendBytes = 0;
 	DWORD flags = 0;
 	WSABUF Buffer{ 0, };
 	Buffer.buf = IODatas[Write].Data;
-	Buffer.len = DataSize;
-	IODatas[Write].TotalBytes = DataSize;
+	Buffer.len = IODatas[Write].CurBytes;
 	int result = WSASend(SocketData.Socket, &Buffer, 1, &SendBytes, flags, &IODatas[Write].Overlapped, NULL);
-
+	IODatas[Write].CurBytes = 0;
+	Log::PrintLog("%d\n", this_thread::get_id());
+	//Log::PrintLog("Socket Error : %d\n", WSAGetLastError());
+	if (WSAGetLastError() == SOCKET_ERROR)
+	{
+		Log::PrintLog("Session Send Error\n");
+		SessionManager::Get().CloseSession(this);
+	}
 }
 

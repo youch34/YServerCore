@@ -1,7 +1,7 @@
 #pragma once
 
 #include <WinSock2.h>
-#include "PacketProcess.h"
+
 
 struct ST_SocketData 
 {
@@ -26,13 +26,13 @@ enum E_SessionState
 struct ST_IOData
 {
 public:
-	OVERLAPPED Overlapped;
-	E_IOUsage Usage;
-	size_t TotalBytes;
-	size_t CurBytes;
-	size_t DataPointer;
+	OVERLAPPED Overlapped = {0,};
+	E_IOUsage Usage = E_IOUsage::Error;
+	size_t TotalBytes = NULL;
+	size_t CurBytes = NULL;
+	size_t DataPointer = NULL;
 	atomic<bool> Complete;
-	char Data[BUF_SIZE];
+	char Data[BUF_SIZE] = {0,};
 };
 
 class Session
@@ -64,15 +64,11 @@ public:
 
 public:
 	ST_SocketData SocketData;
-	PacketProcess PacketProcessor;
 	ST_IOData IODatas[3] = {0,};
 	int SessionID = 0;
-	queue<shared_ptr<YPacket>> SendQueue;
-	vector<shared_ptr<YPacket>> SendBuffers;
 	ST_UserInfo UserInfo;
-	Lock SendLock;
 	Lock QueueLock;
-	mutex Qmutex;
+	std::shared_mutex S_Mutex;
 	E_SessionState SessionState = E_SessionState::Wait;
 public:
 	

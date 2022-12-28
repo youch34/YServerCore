@@ -1,18 +1,30 @@
 #pragma once
+#include "Session.h"
+
+
+static void PrintMsg(ST_ChatMessage msg)
+{
+	//cout << msg.Message << endl;
+}
+
+void RecvCreateAccountRequest(Session* session, ST_UserInfo userinfo);
+void RecvLoginRequest(Session* session,ST_UserInfo userinfo);
+void RecvChatMessage(Session* session, ST_ChatMessage msg);
+void RecvMoveRequest(Session* session, ST_MoveInfo moveinfo);
 
 class PacketProcess 
 {
-public:
+private:
 	PacketProcess();
 	~PacketProcess();
 
-	void Processing(class Session* session, enum E_IOUsage Usage);
 public:
-	void RecvCreateAccountRequest(class Session* session, ST_UserInfo userinfo);
-	void RecvConnectRequest(ST_UserInfo userinfo);
-	void RecvLoginRequest(Session* session,ST_UserInfo userinfo);
-	void RecvChatMessage(class Session* session, const char* Msg);
-	void RecvMoveRequest(class Session* session, ST_MoveInfo moveinfo);
+	static PacketProcess& Get()
+	{
+		static PacketProcess Instance;
+		return Instance;
+	}
+public:
 
 	template<class T>
 	T* CastedIO(char* Packet) { T* result = (T*)Packet; return result; }
@@ -34,12 +46,28 @@ public:
 		Packet.SetHeader(result);
 		return Packet;
 	};
-	
-	static shared_ptr<YPacket> MakeSendPacket(char* Packet)
+
+public:
+	std::function<void(class Session*, char*, size_t)> Handler[20];
+public:
+	void SetHandler()
 	{
-		ST_IOHeader* Header = (ST_IOHeader*)Packet;
-		shared_ptr<YPacket> SendPacket(static_cast<YPacket*>(malloc(Header->Size)), free);
-		memcpy(SendPacket.get(), Packet, Header->Size);
-		return SendPacket;
+		
+		Handler[E_IOType::C_Chat] = [this](class Session* session, char* data, size_t size) { HandleData<ST_ChatMessage>(RecvChatMessage, session,data, size);};
+		Handler[E_IOType::C_CreateAccount] = [this](class Session* session, char* data, size_t size) { HandleData<ST_UserInfo>(RecvCreateAccountRequest, session, data, size); };
+		Handler[E_IOType::C_Login] = [this](class Session* session, char* data, size_t size) { HandleData<ST_UserInfo>(RecvLoginRequest, session, data, size); };
+		Handler[E_IOType::C_Move] = [this](class Session* session, char* data, size_t size) { HandleData<ST_MoveInfo>(RecvMoveRequest, session, data, size); };
+	}
+
+
+	template<typename PacketType, typename FuncType>
+	void HandleData(FuncType func,class Session* session,char* data, size_t size)
+	{
+		PacketType Data;
+		{
+			Data = *((PacketType*)(data));
+			session->IODatas[Read].DataPointer += size;
+		}
+		std::make_unique<std::future<void>*>(new auto(std::async(func, session,Data))).reset();
 	}
 };

@@ -3,15 +3,20 @@
 struct ST_HandleData
 {
 	E_IOType type = E_IOType::None; 
-	char* data = nullptr; 
 	UINT32 size = 0;
+	char data[BUF_SIZE];
 };
 
 static std::function<void(char*, size_t)> Handler[10];
 
 static void PrintMsg(ST_ChatMessage msg)
 {
-	//cout << msg.Message << endl;
+	static int count = 1;
+	++count;
+	for (int i = 1; i < count; i++)
+	{
+		Log::PrintLog("%d\n", i);
+	}
 }
 
 class Client
@@ -26,56 +31,32 @@ public:
 	void SendToServer(char* Msg);
 	void SendUserInfo();
 	void RecieveWork();
-	void Process();
+	void Process(ST_HandleData data);
 
 	void SetHandler()
 	{
 		Handler[E_IOType::S_Chat] = [this](char* data, size_t size) { HandleData<ST_ChatMessage>(PrintMsg, data, size); };
-		Handler[E_IOType::S_Chat] = [this](char* data, size_t size) { PrintMsg(GetHandleData<ST_ChatMessage>(data, size)); };
-
 	}
 	template<typename PacketType, typename FuncType>
 	void HandleData(FuncType func,char* data, size_t size)
 	{
 		PacketType Data;
 		{
-			lock_guard<mutex> LockGuard(ReadLock);
 			Data = *((PacketType*)(data));
 			IODatas[Read].DataPointer += size;
 		}
-		func(Data);
-	}
-
-	template<typename PacketType>
-	PacketType GetHandleData(char* data, size_t size)
-	{
-		PacketType Data;
-		{
-			lock_guard<mutex> LockGuard(ReadLock);
-			Data = *((PacketType*)(data));
-			IODatas[Read].DataPointer += size;
-		}
-		return Data;
+		std::make_unique<std::future<void>*>(new auto(std::async(func, Data))).reset();
 	}
  
 	
 public:
+	queue<ST_HandleData> HandleDataQueue;
 
 public:
-	SOCKET ClientSocket;
+	SOCKET ClientSocket = NULL;
 	thread RecieveThread;
 	ST_IOData IODatas[3];
-	list<char*> PopedReadData;
-	queue<array<char, BUF_SIZE>> ReadDataQueue;
-	queue<shared_ptr<YPacket>> WorkQueue;
-	queue<ST_HandleData> HandleDataQueue;
-	vector<thread> ProcessThreads;
-	condition_variable ProcessCondition;
-	Lock QueueLock;
-	mutex ProcessLock;
 	mutex ReadLock;
 private:
-	bool Running;
-	int count1;
-	int count2;
+	bool Running = false;
 };

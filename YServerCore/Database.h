@@ -38,7 +38,7 @@ public:
 	}
 
 	bool CreateAccount(ST_UserInfo userinfo);
-	bool IsValidID(ST_UserInfo userinfo);
+	bool IsValidID(string userinfo);
 	bool IsValidAccount(ST_UserInfo userinfo);
 
 private:

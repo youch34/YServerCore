@@ -8,18 +8,13 @@ enum E_IOType
 	S_CreateAccount,
 	C_Login,
 	S_Login,
-	C_Connect,
-	S_Connect,
 	C_Chat,
 	S_Chat,
 	C_Move,
 	S_Move,
 };
 
-struct YPacket
-{
 
-};
 
 struct ST_IOHeader
 {
@@ -47,9 +42,9 @@ struct ST_IOHeader
 	}
 };
 
-struct ST_UserInfo : YPacket
+struct ST_UserInfo
 {
-	ST_IOHeader Header{ E_IOType::S_Connect, sizeof(ST_UserInfo) };
+	ST_IOHeader Header{ E_IOType::S_Login, sizeof(ST_UserInfo) };
 	char Id[MAX_ID_LEN];
 	char Pw[MAX_PW_LEN];
 	void SetInfo(string id, string pw)
@@ -59,7 +54,7 @@ struct ST_UserInfo : YPacket
 	}
 };
 
-struct ST_ChatMessage : YPacket
+struct ST_ChatMessage
 {
 	ST_IOHeader Header{ E_IOType::None, sizeof(ST_ChatMessage) };
 	char Id[MAX_ID_LEN];
@@ -71,7 +66,7 @@ struct ST_ChatMessage : YPacket
 	}
 };
 
-struct ST_MoveInfo : YPacket
+struct ST_MoveInfo
 {
 	ST_IOHeader Header{ E_IOType::None, sizeof(ST_MoveInfo) };
 	char Id[MAX_ID_LEN];

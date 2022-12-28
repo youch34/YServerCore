@@ -4,8 +4,19 @@
 class SessionManager 
 {
 private:
-	SessionManager() { Sessions.reserve(sizeof(Session)*1000); };
-	~SessionManager() { for (auto& Session : Sessions) { delete Session; } };
+	SessionManager() 
+	{ 
+		Sessions.reserve(sizeof(Session) * 1000); 
+		Running = true;
+		//HeartBeatThread = thread(&SessionManager::HeartBeat, this);
+	};
+	~SessionManager() 
+	{
+		Running = false;
+		HeartBeatThread.join();
+		for (auto& Session : Sessions) 
+		{ delete Session; } 
+	};
 public:
 	static SessionManager& Get() 
 	{
@@ -15,10 +26,15 @@ public:
 
 public:
 	Lock SessionLock;
-	void AddSession(Session* Session) { WriteLock(SessionLock);	Session->SessionID = SessionCount;  Sessions.push_back(Session); SessionCount++; }
+	void AddSession(Session* Session) 
+	{ 
+		lock_guard<shared_mutex> S_Lock(S_Mutex);	
+		Session->SessionID = SessionCount;  
+		Sessions.push_back(Session); SessionCount++; 
+	}
 	void CloseSession(Session* Session)
 	{
-		WriteLock(SessionLock);
+		lock_guard<shared_mutex> S_Lock(S_Mutex);
 		Sessions[Session->SessionID] = Sessions.back();
 		Sessions.pop_back();
 		SessionCount--;
@@ -26,13 +42,28 @@ public:
 	}
 	void AllMessage(char* Msg) 
 	{
-		WriteLock(SessionLock);
+		shared_lock<shared_mutex> S_Lock(S_Mutex);
 		for (auto& Session : Sessions)
 		{
 			Session->SendPacket(Msg);
 		}
 	}
+	void HeartBeat() 
+	{
+		while (Running)
+		{
+			Sleep(60000);
+			for (auto& Session : Sessions)
+			{
+				ST_IOHeader Header;
+				Session->SendPacket((char*)&Header);
+			}
+		}
+	}
 private:
 	vector<Session*> Sessions;
 	int SessionCount = 0;
+	mutable shared_mutex S_Mutex;
+	thread HeartBeatThread;
+	bool Running = false;
 };

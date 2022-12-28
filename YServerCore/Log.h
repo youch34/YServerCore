@@ -23,7 +23,7 @@ public:
 		va_start(args, str);
 		vprintf(str,args);
 		va_end(args);
-		printf("\n");
+		//printf("\n");
 	};
 	void printWSALastError()
 	{

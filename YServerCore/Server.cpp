@@ -28,13 +28,13 @@ bool Server::Run()
 	Iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, ThreadManager.MaxThreadCount);
 	if (Iocp == nullptr)
 	{
-		Log::PrintLog("Failed to Create IOCP");
+		Log::PrintLog("Failed to Create IOCP\n");
 		return false;
 	}
 
 	if (!CreateListenSocket())
 	{
-		Log::PrintLog("Failed to Create ListenSocket");
+		Log::PrintLog("Failed to Create ListenSocket\n");
 		return false;
 	}
 
@@ -47,14 +47,14 @@ bool Server::CreateListenSocket()
 	WSADATA WsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &WsaData) != 0)
 	{
-		Log::PrintLog("Failed to Init WindSock");
+		Log::PrintLog("Failed to Init WindSock\n");
 		return false;
 	}
 
 	ListenSocket = WSASocket(AF_INET, SOCK_STREAM, NULL, NULL, 0, WSA_FLAG_OVERLAPPED);
 	if (ListenSocket == INVALID_SOCKET)
 	{
-		Log::PrintLog("Failed to Create Listen Socket");
+		Log::PrintLog("Failed to Create Listen Socket\n");
 		return false;
 	}
 
@@ -69,18 +69,18 @@ bool Server::CreateListenSocket()
 	int result = ::bind(ListenSocket, (SOCKADDR*)&ServerAddr, sizeof(ServerAddr));
 	if (result == SOCKET_ERROR)
 	{
-		Log::PrintLog("Socket Bind Error");
+		Log::PrintLog("Socket Bind Error\n");
 		return false;
 	}
 	
 	result = ::listen(ListenSocket, 5);
 	if (result == SOCKET_ERROR)
 	{
-		Log::PrintLog("Listen State Error");
+		Log::PrintLog("Listen State Error\n");
 		return false;
 	}
 
-	Log::PrintLog("Creating Socket Complete");
+	Log::PrintLog("Creating Socket Complete\n");
 
 	return true;
 }
@@ -91,13 +91,13 @@ bool Server::OnAccept(ST_SocketData SocketData)
 	NewSession->OnAccept(SocketData);
 	HANDLE Handle = CreateIoCompletionPort((HANDLE)NewSession->SocketData.Socket, this->Iocp, (ULONG_PTR) & (*NewSession), NULL);
 	if (!Handle) {
-		Log::PrintLog("Fail to Connect IoCompletionPort");
+		Log::PrintLog("Fail to Connect IoCompletionPort\n");
 		delete NewSession;
 		return false;
 	}
 	SessionManager::Get().AddSession(NewSession);
 	NewSession->ReadyToRecieve();
-	Log::PrintLog("Connect Client %d" , NewSession->SessionID);
+	Log::PrintLog("Connect Client %d\n" , NewSession->SessionID);
 	return true;
 }
 
@@ -108,10 +108,10 @@ void Server::AcceptWork(Server* ServerPtr)
 		SOCKET	AcceptSocket = INVALID_SOCKET;
 		SOCKADDR_IN RecvAddr;
 		static int addrLen = sizeof(SOCKADDR_IN);
-		Log::PrintLog("Wait Client");
+		Log::PrintLog("Wait Client\n");
 		AcceptSocket = WSAAccept(ListenSocket, (struct sockaddr*)&RecvAddr, &addrLen, NULL, 0);
 		if (AcceptSocket == SOCKET_ERROR) {
-			Log::PrintLog("Accept Error");
+			Log::PrintLog("Accept Error\n");
 			return;
 		}
 		ST_SocketData NewSocketData;
