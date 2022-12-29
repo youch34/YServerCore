@@ -113,8 +113,6 @@ void Session::Send()
 	Buffer.len = IODatas[Write].CurBytes;
 	int result = WSASend(SocketData.Socket, &Buffer, 1, &SendBytes, flags, &IODatas[Write].Overlapped, NULL);
 	IODatas[Write].CurBytes = 0;
-	Log::PrintLog("%d\n", this_thread::get_id());
-	//Log::PrintLog("Socket Error : %d\n", WSAGetLastError());
 	if (WSAGetLastError() == SOCKET_ERROR)
 	{
 		Log::PrintLog("Session Send Error\n");
